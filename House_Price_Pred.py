@@ -77,6 +77,32 @@ df_house.groupby('month').mean()['price'].plot()
 df_house.groupby('month').mean()['price'].plot()
 plt.savefig('C:/Users/Maria/Documents/GitHub/TensorflowProjects/average_price_per_month.png')
 
+#print(df_house.head())
+
+#check the number of unique zipcodes
+print(df_house['zipcode'].nunique())
+#check the different zipcodes and their counts
+print(df_house['zipcode'].value_counts())
+
+#drop the zipcode column since it has too many unique values
+df_house=df_house.drop('zipcode', axis=1)
+#according to the dataset 0 year means the house was never renovated
+#we can create a new column to indicate whether a house was renovated
+print(df_house['yr_renovated'].value_counts())
+
+#from the dataset we notice that as the years increase the number of renovation increase so having 0 means many house aerlier on were not renovated
+#if the year is 0 we will assign 0 else 1
+df_house['renovated']=df_house['yr_renovated'].apply(lambda x: 0 if x==0 else 1)
+#drop the previous yr_renovated column
+df_house=df_house.drop('yr_renovated', axis=1)
+
+print(df_house['sqft_basement'].value_counts())
+
+#creating a new column to indicate whether a house has a basement or not
+df_house['has_basement']=df_house['sqft_basement'].apply(lambda x: 0 if x==0 else 1)
+#drop the previous sqft_basement column
+df_house=df_house.drop('sqft_basement', axis=1)
+
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
