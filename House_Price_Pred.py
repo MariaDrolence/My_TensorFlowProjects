@@ -37,7 +37,7 @@ sns.countplot(x='bedrooms', data=df_house)
 plt.show()
 
 #finding the correlation between different features in the dataset to the target variable 'price'
-correlation_matrix=df_house.corr()
+correlation_matrix=df_house.corr(numeric_only=True)
 print(correlation_matrix['price'].sort_values(ascending=False))
 
 from sklearn.model_selection import train_test_split
