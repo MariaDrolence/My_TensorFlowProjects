@@ -103,6 +103,26 @@ df_house['has_basement']=df_house['sqft_basement'].apply(lambda x: 0 if x==0 els
 #drop the previous sqft_basement column
 df_house=df_house.drop('sqft_basement', axis=1)
 
+#original features and target variable
+#DROP the price column from the features and store it in y using .values to convert it into an array
+X=df_house.drop('price', axis=1).values
+y=df_house['price'].values
+
+#importing necessary libraries for model building
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tensorflow import keras
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=101)
+
+from sklearn.preprocessing import MinMaxScaler
+
+#create an instance of the minmaxscaler
+scaler= MinMaxScaler()
+#fit the scaler to the training data and transform both training and testing data-Compute the minimum and maximum to be used for later scaling
+scaler.fit(X_train)
+
+#transform the training and testing data
+X_train_scaled=scaler.transform(X_train)
+X_test_scaled=scaler.transform(X_test)
