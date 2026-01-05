@@ -9,19 +9,7 @@ df_loan=pd.read_csv('C:/Users/Maria/Documents/GitHub/TensorflowProjects/TensorFl
 
 #print(df_loan.head())
 
-print(df_loan.info())
-#from the info we can see that there are some null values in the columns
 
-#checking the null values in each column
-print(df_loan.isnull().sum())
-#noticed that the columns with missing value are:
-df_loan.isnull().sum()
-
-#noticed that the columns with missing value are:
-#emp_title - 22927
-#emp_length - 18301
-#title - 1756
-#mort_acc - 37795#pub_rec_bankruptcies - 535
 
 #plot the loan_status column
 plt.figure(figsize=(14,12))
@@ -118,5 +106,86 @@ df_loan.corr(numeric_only=True)['loan_repaid'].sort_values().drop('loan_repaid')
 plt.savefig('C:/Users/Maria/Documents/GitHub/TensorflowProjects/loan_repaid_correlation.png')
 plt.close() 
 
+
+print(df_loan.info())
+#from the info we can see that there are some null values in the columns
+
+#checking the null values in each column
+print(df_loan.isnull().sum())
+#noticed that the columns with missing value are:
+df_loan.isnull().sum()
+
+#noticed that the columns with missing value are:
+#emp_title - 22927
+#emp_length - 18301
+#title - 1756
+#mort_acc - 37795#pub_rec_bankruptcies - 535
+
+
+#we can as well check what percentage of the total data is missing for each column
+missing_percentage=df_loan.isnull().sum()/len(df_loan)*100
+print(missing_percentage)
+
+#lets first examine the emp_title column and emp_length column so as to decide how to handle the missing values
+#how many unique job titles are there in the emp_title column
+print(df_loan['emp_title'].nunique())
+print(df_loan['emp_title'].value_counts().head(20))
+#since there are so many unique job titles it will be difficult to convert them into numerical values
+#hence we will drop the emp_title column
+df_loan=df_loan.drop('emp_title', axis=1)
+
+#handling the emp_length column
+#unique values in the emp_length column
+#print(df_loan['emp_length'].dropna().unique())
+#we can sort the unique values to see them better
+
+sorted(df_loan['emp_length'].dropna().unique())
+
+#a list of the sorted unique values in the emp_length column
+emp_length_ordered=['<1 year', '1 year', '2 years', '3 years', '4 years', '5 years', '6 years', '7 years', '8 years', '9 years', '10+ years']
+#plot the emp_length column to visualize the counts of each employment length category
+plt.figure(figsize=(14,12))
+sns.countplot(x='emp_length', data=df_loan, order=emp_length_ordered, hue='loan_status')
+plt.savefig('C:/Users/Maria/Documents/GitHub/TensorflowProjects/emp_length_countplot.png')
+plt.close()
+
+#now we can get the percentage of charged off loans for each emp_length category
+#this help us know what percentage of people with a certain employment length are likely to default on their loans
+emp_length_charged_off=df_loan[df_loan['loan_status']=='Charged Off'].groupby('emp_length').count()['loan_status']
+
+emp_length_fully_paid=df_loan[df_loan['loan_status']=='Fully Paid'].groupby('emp_length').count()['loan_status']
+
+emp_length_charged_off_percentage=(emp_length_charged_off/(emp_length_charged_off+emp_length_fully_paid))*100
+
+#noticed the percentage of charged off loans for each employment length category has no big difference over the years
+#therefore we will drop the emp_length column since it does not provide much useful information
+df_loan=df_loan.drop('emp_length', axis=1)
+
+print(df_loan.isnull().sum())
+#percentage of people who charged off over those who fully paid their loans based on employment length
+
+#scince the title column is similar to the purpose column we can drop it
+df_loan=df_loan.drop('title', axis=1)
+
+#now let's look at the mort_acc column
+print(df_loan['mort_acc'].value_counts())
+#we need to check which columns are highly correlated with the mort_acc column
+print(correlation_matrix['mort_acc'].sort_values(ascending=False))
+
+#since the mort_acc column has some correlation with the total_acc column we can use that to fill in the missing values
+#now we need to fill in the missing values in the mort_acc column based on the average mort_acc for each total_acc value
+total_acc_avg_mort_acc = df_loan.groupby('total_acc')['mort_acc'].mean()
+
+print(total_acc_avg_mort_acc)
+
+#function to fill in the missing mort_acc values
+def fill_mort_acc(total_acc, mort_acc):
+    if np.isnan(mort_acc):
+        return total_acc_avg_mort_acc[total_acc]
+    else:
+        return mort_acc 
+#apply the function to the mort_acc column
+df_loan['mort_acc']=df_loan.apply(lambda x: fill_mort_acc(x['total_acc'], x['mort_acc']), axis=1)
+print(df_loan.isnull().sum())
 
 #now we need to proceed to data preprocessing and feature engineering before building a classification model.
